@@ -29,7 +29,6 @@ class SerieAPI(Resource):
         res = {}
         if len(series) != 0  and series[0] != None:
             for con in series:
-                print(int(con.ativa))
                 res[con.id] = {
                     'titulo' : con.titulo,
                     'genero' : con.genero,
@@ -47,7 +46,6 @@ class SerieAPI(Resource):
         ativa = args['ativa']
         media_no_imdb = args['media_no_imdb']
         total_de_temporadas = args['total_de_temporadas']
-        print(args['ativa'])
 
         con = Serie(titulo, genero, ativa, media_no_imdb, total_de_temporadas)
         db.session.add(con)
