@@ -33,65 +33,55 @@ def home():
 class PlayerAPI(Resource):
     def get(self, id=None, page=1):
         if id == None:
-            players = Player.query.paginate(page, 20).items
+            players = Player.query.paginate(page, 5).items
         else:
             players = [Player.query.get(id)]
-        if not player:
-            abort(404)
+        
+        if len(players) == 0 or players[0] == None:
+            return json.dumps({})
 
         res = {}
-
-        if len(players) != 0  and players[0] != None:
-            for con in players:
-                res[con.id] = {
-                    'nome_do_jogador': con.nome_do_jogador,
-                    'nickname': con.nickname,
-                    'nome_do_time': con.nome_do_time,
-                    'role': con.role,
-                    'total_de_abatimentos': con.total_de_abatimentos,
-                    'total_de_assistencias': con.total_de_assistencias,
-                    'total_de_mortes': con.total_de_mortes,
-                    'total_de_partidas_jogadas': con.total_de_partidas_jogadas,
-                    'total_de_vitorias': con.total_de_vitorias,
-                    'kda': con.kda(),
-                    'porcentagem_vitorias': con.porcentagem_vitorias(),
-                }
+        for player in players:
+            res.update(player.toJson())
             
         return json.dumps(res)
 
     def post(self):
         args = parser.parse_args()
 
-        player = Player(
-            args['id'],
-            args['nome_do_jogador'],
-            args['nickname'],
-            args['nome_do_time'],
-            args['role'],
-            args['total_de_abatimentos'],
-            args['total_de_assistencias'],
-            args['total_de_mortes'],
-            args['total_de_partidas_jogadas'],
-            args['total_de_vitorias']
-        )
-        
+        player = Player()
+        player.selfUpdateFromArgs(args)
+
         db.session.add(player)
         db.session.commit()
-        
-        res = {}
-        res[player.id] = {
-                'nome_do_jogador': player.nome_do_jogador,
-                'nickname': player.nickname,
-                'nome_do_time': player.nome_do_time,
-                'role': player.role,
-                'total_de_abatimentos': player.total_de_abatimentos,
-                'total_de_assistencias': player.total_de_assistencias,
-                'total_de_mortes': player.total_de_mortes,
-                'total_de_partidas_jogadas': player.total_de_partidas_jogadas,
-                'total_de_vitorias': player.total_de_vitorias,
-        }
-        return json.dumps(res)
 
+        return json.dumps(player.toJson())
+
+    def put(self, id):
+        player = Player.query.get(id)
+        
+        if not player:
+            abort(404)
+        
+        args = parser.parse_args()
+
+        player.selfUpdateFromArgs(args)
+
+        db.session.commit()
+
+        return json.dumps(player.toJson())
+    
+    def delete(self, id):
+        player = Player.query.get(id)
+        
+        if not player:
+            abort(404)
+
+        db.session.delete(player)
+        db.session.commit()
+
+        res = {'id': id}
+        return json.dumps(res)
 
 api.add_resource(
     PlayerAPI,
